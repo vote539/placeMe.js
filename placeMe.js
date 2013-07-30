@@ -54,59 +54,23 @@ $(function() { setTimeout(function() {
 		// This will allow users with no support to see the default text
 		$placeholder.each(function(){
 
-				// The element we're working with.
+			// The element we're working with.
 			var $this = $(this),
-		 		// Get value
-		 		val = $this.attr("placeholder");			
+		 		placeholderTxt = $this.attr("placeholder");			
 
 			// The password input type in IE is masked, so the solution for other input types won't work.
-			// As a work around we'll create a new <input type="text"> element and add it to the DOM.
-			// Once it's created we'll place it above the password feild to essentially "hide" it below our new element.
-			// When the new element is focused, we'll hide it revealing the actual password element. This solution is
-			// by no means perfect, but will work well enough. 
+			// We will dynamically change the field type to text and pack to password when text is entered.
 			if($this.attr("type") == "password") {
-				// In order to position the elements accurately, we need to make a position:relative
-				// container element and then put both the real password field and the fake text
-				// field inside of it, with the fake text field first in order to support proper
-				// tab indexing.
-				var $inputContainer = $("<div>");
-				$inputContainer.attr("style", "position: relative;");
-
-				// Make the fake text field to hold the placeholder
-				var $pwdPlaceholder = $("<input>");
-				$pwdPlaceholder.addClass("placePass");
-				$pwdPlaceholder.val($this.attr("placeholder"));
-				$inputContainer.append($pwdPlaceholder);
-
-				// Move around the elements in the DOM
-				$this.after($inputContainer);
-				$inputContainer.append(this);
-
-				// Position the text field
-				var inputOffset = $this.position();
-				$pwdPlaceholder.css({
-					top: inputOffset.top,
-					left: inputOffset.left,
-					position: "absolute",
-					zIndex: 99
+				$this.val(placeholderTxt);
+				$this.attr("type", "text");
+				$this.focus(function(){
+					$(this).attr("type", "password");
 				});
 
-				// Hide the original field
-				$this.hide();
+			} else if ($this.val() == "") {
+				// This field is not a password field.  Just perform a value swap.
+				$this.val(placeholderTxt);
 			}
-			
-			// Make sure the value attribute is empty and not a password input
-			if(($this.val() == "") && ($this.attr("type") != "password")) {
-				// Put  value
-				$this.val(val);
-			}
-		 });
-		
-		// When an element with a class of "placePass" is clicked, hide it and also
-		// transfer focus to the "real" input field.
-		$(".placePass").focus(function() {
-			$(this).next().show().focus();
-			$(this).remove();
 		});
 
 		// When a user clicks the input (on focus) the default text will be removed
