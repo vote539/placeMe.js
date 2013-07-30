@@ -29,13 +29,13 @@
  * For more information, please refer to <http://unlicense.org/>
  */
 
-$(function() {
+$(function() { setTimeout(function() {
 
 	//Check to see if placeholder is supported
 	//Hat tip: http://diveintohtml5.info/detect.html#input-placeholder
 	function supports_input_placeholder() {
-	  var i = document.createElement('input');
-	  return 'placeholder' in i;
+		var i = document.createElement('input');
+		return 'placeholder' in i;
 	}
 	 
 	if(supports_input_placeholder())
@@ -65,24 +65,34 @@ $(function() {
 			// When the new element is focused, we'll hide it revealing the actual password element. This solution is
 			// by no means perfect, but will work well enough. 
 			if($this.attr("type") == "password") {
-					// Get x position
-			 	var x = $this.position().left,
-			 		// Get y position
-			 		y = $this.position().top,
-			 		// Get class attributes
-			 		eClass = $this.attr("class") ? $this.attr("class") : '',
-			 		// Get id attribute
-			 		id = $this.attr("id") ? $this.attr("id") : '',
-			 		// Get parent element
-			 		parent = $this.parent(),
-			 		// The new element
-			 		el = '<input type="text" id="'+id+'" class="'+eClass+' placePass" value="'+val+'" style="position: absolute; top: '+y+'px; left: '+x+'px; z-index: 9999;">';
+				// In order to position the elements accurately, we need to make a position:relative
+				// container element and then put both the real password field and the fake text
+				// field inside of it, with the fake text field first in order to support proper
+				// tab indexing.
+				var $inputContainer = $("<div>");
+				$inputContainer.attr("style", "position: relative;");
 
-			 	// Create new input and place it within the parent element
-			 	// Using CSS positioning we'll place it above the original element
-			 	// We'll also add a class of "placePass" to keep track of these new elements
-			 	$(parent).prepend(el);
+				// Make the fake text field to hold the placeholder
+				var $pwdPlaceholder = $("<input>");
+				$pwdPlaceholder.addClass("placePass");
+				$pwdPlaceholder.val($this.attr("placeholder"));
+				$inputContainer.append($pwdPlaceholder);
 
+				// Move around the elements in the DOM
+				$this.after($inputContainer);
+				$inputContainer.append(this);
+
+				// Position the text field
+				var inputOffset = $this.position();
+				$pwdPlaceholder.css({
+					top: inputOffset.top,
+					left: inputOffset.left,
+					position: "absolute",
+					zIndex: 99
+				});
+
+				// Hide the original field
+				$this.hide();
 			}
 			
 			// Make sure the value attribute is empty and not a password input
@@ -92,9 +102,11 @@ $(function() {
 			}
 		 });
 		
-		// When an element with a class of "placePass" is clicked, hide it.
+		// When an element with a class of "placePass" is clicked, hide it and also
+		// transfer focus to the "real" input field.
 		$(".placePass").focus(function() {
-			$(this).hide();
+			$(this).next().show().focus();
+			$(this).remove();
 		});
 
 		// When a user clicks the input (on focus) the default text will be removed
@@ -138,4 +150,4 @@ $(function() {
 		});
 	}
 	
-});
+}, 500); });
